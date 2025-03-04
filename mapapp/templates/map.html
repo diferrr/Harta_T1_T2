@@ -1,113 +1,174 @@
-<!DOCTYPE html>
-<html lang="ro">
+<!DOCTYPE html> <!-- Определяем тип документа как HTML5 -->
+<html lang="ro"> <!-- Открываем HTML-документ, задаём язык страницы (румынский) -->
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harta Sinoptica</title>
+    <meta charset="UTF-8"> <!-- Указываем кодировку UTF-8 (поддерживает все символы) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Оптимизируем страницу под мобильные устройства -->
+    <title>Harta Sinoptica</title> <!-- Название страницы (отображается на вкладке браузера) -->
 
-    <!-- Leaflet стили и JS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Подключаем стили и JavaScript для Leaflet (карты) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" /> <!-- CSS для Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> <!-- Подключаем JavaScript для Leaflet -->
 
-    <!-- Подключаем Leaflet.markercluster -->
+    <!-- Подключаем Leaflet.markercluster для объединения маркеров в кластеры -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
     <style>
+        /* Основные стили страницы */
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
-            padding: 20px;
+            font-family: Arial, sans-serif; /* Устанавливаем шрифт */
+            text-align: center; /* Выравниваем текст по центру */
+            background-color: #f4f4f4; /* Цвет фона */
+            padding: 20px; /* Внутренний отступ */
         }
+
         h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
+            color: #2c3e50; /* Цвет заголовка */
+            margin-bottom: 10px; /* Отступ снизу */
         }
-        #map {
-            height: 700px;
-            width: 100%;
-            border: 2px solid #2c3e50;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
+
+       #map {
+    height: 600px; /* Высота карты */
+    width: 1300px; /* Теперь ширина равна высоте, делая карту квадратной */
+    border: 2px solid #2c3e50; /* Граница */
+    border-radius: 8px; /* Закруглённые углы */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Тень вокруг карты */
+    margin: 0 auto; /* Центрируем карту на странице */
+}
+
+
+        /* Стили для контейнера поиска */
         #search-container {
-            margin-bottom: 10px;
+            margin-bottom: 10px; /* Отступ снизу */
         }
+
+        /* Стили для поля ввода */
         #search-box {
-            padding: 8px;
-            width: 250px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 8px; /* Внутренний отступ */
+            width: 250px; /* Ширина */
+            border: 1px solid #ccc; /* Граница */
+            border-radius: 4px; /* Закруглённые углы */
         }
+
+        /* Стили для кнопки поиска */
         #search-button {
-            padding: 8px 15px;
-            background-color: #2c3e50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 8px 15px; /* Внутренние отступы */
+            background-color: #2c3e50; /* Цвет фона */
+            color: white; /* Цвет текста */
+            border: none; /* Убираем границу */
+            border-radius: 4px; /* Закруглённые углы */
+            cursor: pointer; /* Изменяем курсор на указатель */
+        }
+
+        /* Стили для всплывающего окна (popup) */
+        .leaflet-popup-content {
+            font-size: 14px; /* Размер шрифта */
+            color: #2c3e50; /* Цвет текста */
+            text-align: center; /* Выравнивание по центру */
+            padding: 10px; /* Внутренний отступ */
+        }
+
+        .leaflet-popup-content b {
+            font-size: 16px; /* Увеличенный шрифт */
+            color: #e74c3c; /* Красный цвет */
+        }
+
+        .leaflet-popup-content a {
+            color: #3498db; /* Голубой цвет ссылки */
+            font-weight: bold; /* Жирный текст */
+            text-decoration: none; /* Убираем подчёркивание */
+        }
+
+        .leaflet-popup-content a:hover {
+            text-decoration: underline; /* Добавляем подчёркивание при наведении */
+        }
+
+        .leaflet-popup-tip {
+            background: #2c3e50; /* Цвет "хвостика" всплывающего окна */
         }
     </style>
 </head>
 <body>
 
-    <h1>Harta Sinoptica</h1>
-    <div id="search-container">
-        <input type="text" id="search-box" placeholder="întroduceți Nr obiectului...">
-        <button id="search-button">CAUTĂ</button>
+    <h1>Harta Sinoptica</h1> <!-- Заголовок страницы -->
+
+    <div id="search-container"> <!-- Контейнер для поиска -->
+        <input type="text" id="search-box" placeholder="întroduceți Nr obiectului..."> <!-- Поле ввода номера объекта -->
+        <button id="search-button">CAUTĂ</button> <!-- Кнопка поиска -->
     </div>
-    <div id="map"></div>
+
+    <div id="map"></div> <!-- Контейнер для карты -->
 
     <script>
+    // Создаём карту Leaflet и устанавливаем начальный вид
     var map = L.map('map').setView([47.0569, 28.857], 12);
 
+    // Добавляем слой карты OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    var markers = L.markerClusterGroup();
-    var pumpMarkers = {};
+    var markers = L.markerClusterGroup(); // Группа кластеров маркеров
+    var pumpMarkers = {}; // Объект для хранения маркеров
 
+    // Получаем данные с сервера (API) и добавляем маркеры
     fetch('/api/pumps/')
-        .then(response => response.json())
+        .then(response => response.json()) // Конвертируем ответ в JSON
         .then(data => {
-            data.forEach(pump => {
+            data.forEach(pump => { // Перебираем каждый насос
                 let iconUrl = pump.type_device === 1
-                    ? '/static/icons/red.png'
-                    : '/static/icons/blue.png';
+                    ? '/static/icons/red.png' // Красная иконка для типа 1
+                    : '/static/icons/blue.png'; // Синяя иконка для других
 
-                let marker = L.marker([pump.lat, pump.longitude], {
+                let marker = L.marker([pump.lat, pump.longitude], { // Создаём маркер
                     icon: L.icon({
-                        iconUrl: iconUrl,
-                        iconSize: [50, 50],
-                        iconAnchor: [17, 45],
-                        popupAnchor: [0, -40]
+                        iconUrl: iconUrl, // Устанавливаем иконку
+                        iconSize: [50, 50], // Размер иконки
+                        iconAnchor: [17, 45], // Точка привязки иконки
+                        popupAnchor: [0, -40] // Смещение всплывающего окна
                     })
-                }).bindPopup(`
-                    <b>${pump.param_name}</b><br>
-                    ${pump.address}<br>
-                    <a href='http://10.1.1.174/view/view_page.php?title=${pump.param_name.replace(/\./g, '').replace('PT_', '')}' target='_blank'>Схема</a>
+                }).bindPopup(` <!-- Всплывающее окно -->
+                    <div class="popup-content">
+                        <b>${pump.param_name}</b><br> <!-- Название насоса -->
+                        📍 ${pump.address}<br> <!-- Адрес -->
+                        <a href='http://10.1.1.174/view/view_page.php?title=${pump.param_name.replace(/\./g, '').replace('PT_', '')}' target='_blank'>🔍 Открыть схему</a>
+                    </div>
                 `);
 
-                markers.addLayer(marker);
-                pumpMarkers[pump.param_name] = marker;
+                markers.addLayer(marker); // Добавляем маркер в кластер
+                pumpMarkers[pump.param_name] = marker; // Сохраняем маркер в объекте
             });
 
-            map.addLayer(markers);
+            map.addLayer(markers); // Добавляем кластеры на карту
         });
 
-    document.getElementById('search-button').addEventListener('click', function() {
-        var query = document.getElementById('search-box').value.trim();
-        if (pumpMarkers[query]) {
-            map.setView(pumpMarkers[query].getLatLng(), 16);
-            pumpMarkers[query].openPopup();
+    // Функция поиска объекта
+    function searchObject() {
+        var query = document.getElementById('search-box').value.trim(); // Получаем введённое значение
+        if (pumpMarkers[query]) { // Если объект найден
+            map.setView(pumpMarkers[query].getLatLng(), 16, { animate: true }); // Перемещаем карту
+
+            map.once('moveend', function() { // Ждём завершения перемещения
+                pumpMarkers[query].openPopup(); // Открываем всплывающее окно
+            });
+
         } else {
-            alert('Obiectul nu a fost găsit!');
+            alert('Obiectul nu a fost găsit!'); // Выводим сообщение, если объект не найден
+        }
+    }
+
+    // Поиск по кнопке
+    document.getElementById('search-button').addEventListener('click', searchObject);
+
+    // Поиск по клавише Enter
+    document.getElementById('search-box').addEventListener('keyup', function(event) {
+        if (event.key === 'Enter') {
+            searchObject();
         }
     });
     </script>
 </body>
 </html>
+
 
