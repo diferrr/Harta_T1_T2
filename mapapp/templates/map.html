@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harta Sinoptica</title>
+
+    <!-- Leaflet стили и JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- Подключаем Leaflet.markercluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        #map {
+            height: 700px;
+            width: 100%;
+            border: 2px solid #2c3e50;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        #search-container {
+            margin-bottom: 10px;
+        }
+        #search-box {
+            padding: 8px;
+            width: 250px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #search-button {
+            padding: 8px 15px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Harta Sinoptica</h1>
+    <div id="search-container">
+        <input type="text" id="search-box" placeholder="întroduceți Nr obiectului...">
+        <button id="search-button">CAUTĂ</button>
+    </div>
+    <div id="map"></div>
+
+    <script>
+    var map = L.map('map').setView([47.0569, 28.857], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var markers = L.markerClusterGroup();
+    var pumpMarkers = {};
+
+    fetch('/api/pumps/')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(pump => {
+                let iconUrl = pump.type_device === 1
+                    ? '/static/icons/red.png'
+                    : '/static/icons/blue.png';
+
+                let marker = L.marker([pump.lat, pump.longitude], {
+                    icon: L.icon({
+                        iconUrl: iconUrl,
+                        iconSize: [50, 50],
+                        iconAnchor: [17, 45],
+                        popupAnchor: [0, -40]
+                    })
+                }).bindPopup(`
+                    <b>${pump.param_name}</b><br>
+                    ${pump.address}<br>
+                    <a href='http://10.1.1.174/view/view_page.php?title=${pump.param_name.replace(/\./g, '').replace('PT_', '')}' target='_blank'>Схема</a>
+                `);
+
+                markers.addLayer(marker);
+                pumpMarkers[pump.param_name] = marker;
+            });
+
+            map.addLayer(markers);
+        });
+
+    document.getElementById('search-button').addEventListener('click', function() {
+        var query = document.getElementById('search-box').value.trim();
+        if (pumpMarkers[query]) {
+            map.setView(pumpMarkers[query].getLatLng(), 16);
+            pumpMarkers[query].openPopup();
+        } else {
+            alert('Obiectul nu a fost găsit!');
+        }
+    });
+    </script>
+</body>
+</html>
+
