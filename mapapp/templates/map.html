@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Harta Sinoptica</title>
+    <title>TERMOELECTRICA S.A.</title>
 
     <!-- Подключаем Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <!-- Подключаем Leaflet.markercluster для кластеризации -->
@@ -28,19 +28,7 @@
             align-items: center;
             width: 100%;
             max-width: 1300px;
-            margin: 10px auto;
-        }
-
-        .logo-container {
-            flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            padding: 5px 20px;
-        }
-
-        .logo-container img {
-            width: 200px; /* Увеличиваем ширину */
-            height: auto; /* Автоматическая высота для сохранения пропорций */
+            margin: 0 auto 10px auto;
         }
 
         h1 {
@@ -55,7 +43,7 @@
 
         #search-box {
             padding: 8px;
-            width: 250px;
+            width: 200px;
             border: 1px solid #ccc;
             border-radius: 4px;
         }
@@ -69,6 +57,56 @@
             cursor: pointer;
         }
 
+        #search-button:hover {
+            background-color: #1a252f;
+        }
+
+        #sector-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        #sector-buttons button {
+            padding: 14px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            background: linear-gradient(180deg, #222 0%, #000 100%);
+            border: 3px solid #bbb;
+            border-radius: 50px;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 4px 10px rgba(0, 0, 0, 0.8),
+                inset 0 2px  rgba(255, 255, 255, 0.3),
+                inset 0 -2px 3px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+/* СТИЛЬ АКТИВНОЙ (НАЖАТОЙ) КНОПКИ */
+        #sector-buttons button.active {
+            background: linear-gradient(180deg, #444 0%, #111 100%);
+            border-color: green;
+            box-shadow:
+                0 6px 15px rgba(0, 0, 0, 0.9),
+                inset 0 3px  rgba(255, 255, 255, 0.5),
+                inset 0 -3px 4px rgba(0, 0, 0, 0.7);
+            transform: scale(1.02);
+        }
+
+/* Эффект наведения */
+        #sector-buttons button:hover {
+            background: linear-gradient(180deg, #333 0%, #111 100%);
+            transform: scale(1.05);
+            border-color: white;
+        }
+
+
         #map {
             height: 600px;
             width: 100%;
@@ -81,20 +119,26 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Harta Sinoptica</h1>
-        <div class="logo-container">
-            <img src="/static/images/termoelectrica.png" alt="Termoelectrica SA">
-        </div>
-        <div id="search-container">
-            <input type="text" id="search-box" placeholder="întroduceți Nr obiectului...">
-            <button id="search-button">CAUTĂ</button>
-        </div>
+<div class="header">
+    <h1>Harta Sinoptică</h1>
+    <div id="search-container">
+        <input type="text" id="search-box" placeholder="Întroduceți Nr obiectului...">
+        <button id="search-button">CAUTĂ</button>
     </div>
+</div>
 
-    <div id="map"></div>
+<div id="sector-buttons">
+    <button onclick="focusSector(1)">Centru</button>
+    <button onclick="focusSector(2)">Rășcani</button>
+    <button onclick="focusSector(3)">Botanica</button>
+    <button onclick="focusSector(4)">Buiucani</button>
+    <button onclick="focusSector(6)">Ciocana</button>
+    <button onclick="focusSector(0)">Arată Toate</button>
+</div>
 
-    <script>
+<div id="map"></div>
+
+<script>
     var map = L.map('map').setView([47.0569, 28.857], 12);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -134,7 +178,8 @@
 
             data.forEach(pump => {
                 let marker = L.marker([pump.lat, pump.longitude], {
-                    icon: pump.type_device === 1 ? redIcon : blueIcon
+                    icon: pump.type_device === 1 ? redIcon : blueIcon,
+                    number_map: pump.number_map
                 }).bindPopup(`
                     <div class="popup-content">
                         <b>${pump.param_name}</b><br>
@@ -172,7 +217,50 @@
             searchObject();
         }
     });
-    </script>
+
+// Функция для фокусировки сектора и подсветки активной кнопки
+    function focusSector(sector) {
+        markers.clearLayers();
+
+        Object.values(pumpMarkers).forEach(marker => {
+            if (sector === 0 || marker.options.number_map === sector) {
+                markers.addLayer(marker);
+            }
+        });
+
+        if (markers.getLayers().length > 0) {
+            map.fitBounds(markers.getBounds());
+        }
+
+    // Сброс "активного" состояния у всех кнопок
+    document.querySelectorAll("#sector-buttons button").forEach(button => {
+        button.classList.remove("active");
+    });
+
+    // Добавление "активного" состояния нажатой кнопке
+    let activeButton = document.querySelector(`#sector-buttons button:nth-child(${sector + 1})`);
+    if (activeButton) {
+        activeButton.classList.add("active");
+    }
+}
+
+// Добавляем обработчики событий для всех кнопок
+document.addEventListener("DOMContentLoaded", function() {
+    const buttons = document.querySelectorAll("#sector-buttons button");
+
+    buttons.forEach(button => {
+        button.addEventListener("click", function() {
+            // Удаляем класс "active" у всех кнопок
+            buttons.forEach(btn => btn.classList.remove("active"));
+
+            // Добавляем "active" только к нажатой кнопке
+            this.classList.add("active");
+        });
+    });
+});
+
+</script>
 </body>
 </html>
+
 
