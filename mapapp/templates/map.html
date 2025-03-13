@@ -7,11 +7,13 @@
 
     <!-- Подключаем Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <!-- Подключаем Leaflet.markercluster для кластеризации -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
     <style>
@@ -200,16 +202,28 @@
         });
 
     function searchObject() {
-        var query = document.getElementById('search-box').value.trim().toLowerCase();
-        if (pumpMarkers[query]) {
-            map.setView(pumpMarkers[query].getLatLng(), 16, { animate: true });
-            map.once('moveend', function() {
-                pumpMarkers[query].openPopup();
-            });
-        } else {
-            alert('Obiectul nu a fost găsit!');
-        }
+    let query = $('#search-box').val().trim().toLowerCase();
+    markers.clearLayers();
+
+    if (pumpMarkers[query]) {
+        let foundMarker = pumpMarkers[query];
+        markers.addLayer(foundMarker);
+        map.setView(foundMarker.getLatLng(), 16, { animate: true });
+
+        map.once('moveend', () => foundMarker.openPopup());
+    } else {
+        alert('Obiectul nu a fost găsit!');
     }
+}
+
+$('#search-button').click(searchObject);
+
+$('#search-box').keypress(function(e) {
+    if (e.which === 13) {  // клавиша Enter
+        searchObject();
+    }
+});
+
 
     document.getElementById('search-button').addEventListener('click', searchObject);
     document.getElementById('search-box').addEventListener('keyup', function(event) {

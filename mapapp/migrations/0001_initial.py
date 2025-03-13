@@ -7,24 +7,31 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='HeatPump',
+            name="HeatPump",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('address', models.CharField(max_length=255)),
-                ('param_name', models.CharField(max_length=255)),
-                ('latitude', models.FloatField()),
-                ('longitude', models.FloatField()),
-                ('number_map', models.IntegerField()),
-                ('type_device', models.IntegerField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("address", models.CharField(max_length=255)),
+                ("param_name", models.CharField(max_length=255)),
+                ("latitude", models.FloatField()),
+                ("longitude", models.FloatField()),
+                ("number_map", models.IntegerField()),
+                ("type_device", models.IntegerField()),
             ],
             options={
-                'db_table': 'map_markers',
-                'managed': False,
+                "db_table": "map_markers",
+                "managed": False,
             },
         ),
     ]
