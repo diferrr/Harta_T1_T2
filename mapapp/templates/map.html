@@ -72,7 +72,7 @@
         }
 
         #sector-buttons button {
-            padding: 14px 30px;
+            padding: 5px 30px;
             font-size: 16px;
             font-weight: bold;
             background: linear-gradient(180deg, #222 0%, #000 100%);
@@ -147,12 +147,14 @@
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    var markers = L.markerClusterGroup({
-        maxClusterRadius: 50,
-        disableClusteringAtZoom: 15,
-        showCoverageOnHover: false,
-        spiderfyOnMaxZoom: false
+        var markers = L.markerClusterGroup({
+        maxClusterRadius: 80,
+        disableClusteringAtZoom: 18,
+        showCoverageOnHover: true,
+        spiderfyOnMaxZoom: true
     });
+
+
 
     var pumpMarkers = {};
 
@@ -216,6 +218,30 @@
     }
 }
 
+function searchObject() {
+    let query = $('#search-box').val().trim().toLowerCase();
+    markers.clearLayers();
+
+    if (query === "") {
+        Object.values(pumpMarkers).forEach(function(marker) {
+            markers.addLayer(marker);
+        });
+        if (markers.getLayers().length > 0) {
+            map.fitBounds(markers.getBounds());
+        }
+        return;
+    }
+
+    if (pumpMarkers[query]) {
+        let foundMarker = pumpMarkers[query];
+        markers.addLayer(foundMarker);
+        map.setView(foundMarker.getLatLng(), 16, { animate: true });
+        map.once('moveend', () => foundMarker.openPopup());
+    } else {
+        alert('Obiectul nu a fost găsit!');
+    }
+}
+
 $('#search-button').click(searchObject);
 
 $('#search-box').keypress(function(e) {
@@ -223,6 +249,20 @@ $('#search-box').keypress(function(e) {
         searchObject();
     }
 });
+
+// Новый обработчик для автоматического восстановления маркеров при очистке поля
+$('#search-box').on('input', function() {
+    if ($(this).val().trim() === "") {
+        markers.clearLayers();
+        Object.values(pumpMarkers).forEach(function(marker) {
+            markers.addLayer(marker);
+        });
+        if (markers.getLayers().length > 0) {
+            map.fitBounds(markers.getBounds());
+        }
+    }
+});
+
 
 
     document.getElementById('search-button').addEventListener('click', searchObject);
