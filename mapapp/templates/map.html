@@ -122,11 +122,15 @@
 </head>
 <body>
 <div class="header">
+
     <h1>Harta Sinoptică</h1>
+
     <div id="search-container">
-        <input type="text" id="search-box" placeholder="Întroduceți Nr obiectului...">
-        <button id="search-button">CAUTĂ</button>
-    </div>
+    <input type="text" id="search-box" placeholder="Întroduceți Nr obiectului..." list="search-history">
+    <datalist id="search-history"></datalist>
+    <button id="search-button">CAUTĂ</button>
+</div>
+
 </div>
 
 <div id="sector-buttons">
@@ -203,24 +207,36 @@
             alert('Не удалось загрузить данные с сервера.');
         });
 
-    function searchObject() {
-    let query = $('#search-box').val().trim().toLowerCase();
-    markers.clearLayers();
+    function updateSearchHistoryList() {
+    // Получаем историю из localStorage, если она есть, иначе создаём пустой массив
+    let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+    // Очищаем текущий datalist
+    $('#search-history').empty();
+    // Добавляем каждый элемент истории в виде <option>
+    history.forEach(function(item) {
+        $('#search-history').append(`<option value="${item}">`);
+    });
+}
 
-    if (pumpMarkers[query]) {
-        let foundMarker = pumpMarkers[query];
-        markers.addLayer(foundMarker);
-        map.setView(foundMarker.getLatLng(), 16, { animate: true });
-
-        map.once('moveend', () => foundMarker.openPopup());
-    } else {
-        alert('Obiectul nu a fost găsit!');
+function saveSearchQuery(query) {
+    if (query === "") return; // не сохраняем пустые значения
+    let history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+    // Если такой запрос уже есть, не добавляем повторно
+    if (!history.includes(query)) {
+        history.push(query);
+        localStorage.setItem('searchHistory', JSON.stringify(history));
+        updateSearchHistoryList();
     }
 }
 
 function searchObject() {
     let query = $('#search-box').val().trim().toLowerCase();
     markers.clearLayers();
+
+    // Сохраняем запрос в историю, если он не пустой
+    if (query !== "") {
+        saveSearchQuery(query);
+    }
 
     if (query === "") {
         Object.values(pumpMarkers).forEach(function(marker) {
@@ -263,6 +279,10 @@ $('#search-box').on('input', function() {
     }
 });
 
+// При загрузке страницы обновляем выпадающий список истории
+$(document).ready(function() {
+    updateSearchHistoryList();
+});
 
 
     document.getElementById('search-button').addEventListener('click', searchObject);
