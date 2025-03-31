@@ -13,7 +13,6 @@
     <!-- Подключаем Leaflet.markercluster для кластеризации -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
     <style>
@@ -185,20 +184,24 @@
             });
 
             data.forEach(pump => {
-                let marker = L.marker([pump.lat, pump.longitude], {
-                    icon: pump.type_device === 1 ? redIcon : blueIcon,
-                    number_map: pump.number_map
-                }).bindPopup(`
-                    <div class="popup-content">
-                        <b>${pump.param_name}</b><br>
-                        ${pump.address}<br>
-                        <a href='http://10.1.1.174/view/view_page.php?title=${encodeURIComponent(pump.param_name.replace(/\./g, '').replace('PT_', ''))}' target='_blank'> Schema</a>
-                    </div>
-                `);
+    let typeName = pump.type_device === 1 ? "PTC" : "PTI"; // Определяем название типа объекта
 
-                markers.addLayer(marker);
-                pumpMarkers[pump.param_name.toLowerCase()] = marker;
-            });
+    let marker = L.marker([pump.lat, pump.longitude], {
+        icon: pump.type_device === 1 ? redIcon : blueIcon,
+        number_map: pump.number_map
+    }).bindPopup(`
+        <div class="popup-content">
+            <b>${typeName}</b><br>  <!-- Добавили тип объекта -->
+            <b>${pump.param_name}</b><br>
+            ${pump.address}<br>
+            <a href='http://10.1.1.174/view/view_page.php?title=${encodeURIComponent(pump.param_name.replace(/\./g, '').replace('PT_', ''))}' target='_blank'> Schema</a>
+        </div>
+    `);
+
+    markers.addLayer(marker);
+    pumpMarkers[pump.param_name.toLowerCase()] = marker;
+});
+
 
             map.addLayer(markers);
         })
@@ -238,6 +241,7 @@ function searchObject() {
         saveSearchQuery(query);
     }
 
+    // Если поле поиска пустое – возвращаем все маркеры
     if (query === "") {
         Object.values(pumpMarkers).forEach(function(marker) {
             markers.addLayer(marker);
@@ -248,15 +252,32 @@ function searchObject() {
         return;
     }
 
-    if (pumpMarkers[query]) {
-        let foundMarker = pumpMarkers[query];
-        markers.addLayer(foundMarker);
-        map.setView(foundMarker.getLatLng(), 16, { animate: true });
-        map.once('moveend', () => foundMarker.openPopup());
+    // Добавляем возможные варианты (с префиксом и без)
+    let searchVariants = [query];
+    if (!query.startsWith("pt_")) {
+        searchVariants.push("pt_" + query);
     } else {
+        searchVariants.push(query.replace("pt_", ""));
+    }
+
+    let found = false;
+
+    // Проверяем оба варианта (с префиксом и без)
+    searchVariants.forEach(variant => {
+        if (pumpMarkers[variant]) {
+            let foundMarker = pumpMarkers[variant];
+            markers.addLayer(foundMarker);
+            map.setView(foundMarker.getLatLng(), 16, { animate: true });
+            map.once('moveend', () => foundMarker.openPopup());
+            found = true;
+        }
+    });
+
+    if (!found) {
         alert('Obiectul nu a fost găsit!');
     }
 }
+
 
 $('#search-button').click(searchObject);
 
