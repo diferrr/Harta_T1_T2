@@ -183,7 +183,7 @@
                 popupAnchor: [0, -40]
             });
 
-            data.forEach(pump => {
+           data.forEach(pump => {
     let typeName = pump.type_device === 1 ? "PTC" : "PTI"; // Определяем название типа объекта
 
     let marker = L.marker([pump.lat, pump.longitude], {
@@ -191,12 +191,36 @@
         number_map: pump.number_map
     }).bindPopup(`
         <div class="popup-content">
-            <b>${typeName}</b><br>  <!-- Добавили тип объекта -->
+            <b>${typeName}</b><br>
             <b>${pump.param_name}</b><br>
             ${pump.address}<br>
+            <b>T1:</b> ${pump.T1 ?? '—'} °C<br>
+            <b>T2:</b> ${pump.T2 ?? '—'} °C<br>
             <a href='http://10.1.1.174/view/view_page.php?title=${encodeURIComponent(pump.param_name.replace(/\./g, '').replace('PT_', ''))}' target='_blank'> Schema</a>
         </div>
     `);
+
+    marker.on('popupopen', function () {
+        fetch(`/api/live_temp/${pump.param_name}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.T1 || data.T2) {
+                    const popup = marker.getPopup();
+                    const content = popup.getContent();
+
+                    const updated = content
+                        .replace(/<b>T1:<\/b>[^<]*°C/, `<b>T1:</b> ${data.T1 ? parseFloat(data.T1).toFixed(2) : '—'} °C`)
+                        .replace(/<b>T2:<\/b>[^<]*°C/, `<b>T2:</b> ${data.T2 ? parseFloat(data.T2).toFixed(2) : '—'} °C`);
+
+
+
+                    popup.setContent(updated).update();
+                }
+            })
+            .catch(err => {
+                console.error("Ошибка загрузки температуры:", err);
+            });
+    });
 
     markers.addLayer(marker);
     pumpMarkers[pump.param_name.toLowerCase()] = marker;
@@ -357,5 +381,4 @@ document.addEventListener("DOMContentLoaded", function() {
 </script>
 </body>
 </html>
-
 

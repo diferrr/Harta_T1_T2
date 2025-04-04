@@ -80,17 +80,18 @@ WSGI_APPLICATION = 'harta.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'mssql',
-        'NAME': 'MyLocalDB',  # Название БД в SSMS
-        'USER': '',  # Оставляем пустым (Windows Authentication)
-        'PASSWORD': '',  # Оставляем пустым
-        'HOST': 'localhost\\SQLEXPRESS',  # Имя сервера в SSMS
-        'PORT': '',  # Обычно пустой
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'access_user',           # Название БД
+        'USER': 'victor',                # Имя пользователя
+        'PASSWORD': 'Sursa2@!',# Пароль
+        'HOST': '10.1.1.174',            # IP сервера
+        'PORT': '3306',                  # Порт по умолчанию
         'OPTIONS': {
-            'driver': 'ODBC Driver 17 for SQL Server',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
     }
 }
+
 
 
 
